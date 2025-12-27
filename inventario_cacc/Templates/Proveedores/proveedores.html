@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Proveedores</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'admin_dashboard' %}">
+                <i class="bi bi-speedometer2"></i> Sistema Inventario
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="navbar-text text-light me-3">
+                            <i class="bi bi-person-circle"></i> {{ user.username }}
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout' %}">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin_dashboard' %}">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'productos' %}">
+                                <i class="bi bi-box-seam"></i> Productos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'categorias' %}">
+                                <i class="bi bi-tags"></i> Categorías
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'proveedores' %}">
+                                <i class="bi bi-truck"></i> Proveedores
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'clientes' %}">
+                                <i class="bi bi-people"></i> Clientes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'pedidos_admin' %}">
+                                <i class="bi bi-bag-check"></i> Pedidos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'movimientos' %}">
+                                <i class="bi bi-arrow-left-right"></i> Movimientos
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2"><i class="bi bi-truck"></i> Gestión de Proveedores</h1>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalProveedor">
+                        <i class="bi bi-plus-circle"></i> Nuevo Proveedor
+                    </button>
+                </div>
+
+                <!-- Mensajes -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Tabla de proveedores -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Teléfono</th>
+                                        <th>Email</th>
+                                        <th>Dirección</th>
+                                        <th>Productos</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for proveedor in proveedores %}
+                                    <tr>
+                                        <td>{{ proveedor.id }}</td>
+                                        <td>
+                                            <strong>{{ proveedor.nombre }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if proveedor.telefono %}
+                                                <i class="bi bi-telephone"></i> {{ proveedor.telefono }}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if proveedor.email %}
+                                                <i class="bi bi-envelope"></i> {{ proveedor.email }}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if proveedor.direccion %}
+                                                <i class="bi bi-geo-alt"></i> {{ proveedor.direccion|truncatewords:5 }}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ proveedor.producto_set.count }}</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#modalEditarProveedor{{ proveedor.id }}">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <form method="POST" action="{% url 'eliminar_proveedor' proveedor.id %}" style="display: inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de eliminar este proveedor?')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center">No hay proveedores registrados</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal para crear proveedor -->
+    <div class="modal fade" id="modalProveedor" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-truck"></i> Nuevo Proveedor
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'crear_proveedor' %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre del Proveedor *</label>
+                                <input type="text" name="nombre" class="form-control" required maxlength="150">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Teléfono</label>
+                                <input type="text" name="telefono" class="form-control" maxlength="50">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" maxlength="150">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Dirección</label>
+                                <input type="text" name="direccion" class="form-control" maxlength="200">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Guardar Proveedor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modales para editar proveedores -->
+    {% for proveedor in proveedores %}
+    <div class="modal fade" id="modalEditarProveedor{{ proveedor.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil"></i> Editar Proveedor
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'editar_proveedor' proveedor.id %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre del Proveedor *</label>
+                                <input type="text" name="nombre" class="form-control" value="{{ proveedor.nombre }}" required maxlength="150">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Teléfono</label>
+                                <input type="text" name="telefono" class="form-control" value="{{ proveedor.telefono }}" maxlength="50">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" value="{{ proveedor.email }}" maxlength="150">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Dirección</label>
+                                <input type="text" name="direccion" class="form-control" value="{{ proveedor.direccion }}" maxlength="200">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Actualizar Proveedor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

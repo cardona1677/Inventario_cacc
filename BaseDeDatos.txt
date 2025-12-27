@@ -1,0 +1,67 @@
+CREATE DATABASE inventario_db;
+USE inventario_db;
+
+
+-- =========================
+-- TABLA CATEGORÍA
+-- =========================
+CREATE TABLE categoria (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT NULL
+);
+
+-- =========================
+-- TABLA PROVEEDOR
+-- =========================
+CREATE TABLE proveedor (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    telefono VARCHAR(50),
+    email VARCHAR(150),
+    direccion VARCHAR(200)
+);
+
+-- =========================
+-- TABLA PRODUCTO
+-- =========================
+CREATE TABLE producto (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT NULL,
+    categoria_id INT,
+    proveedor_id INT,
+    precio DECIMAL(12,2) DEFAULT 0,
+    stock INT DEFAULT 0,
+    fecha_creacion DATE,
+    FOREIGN KEY (categoria_id) REFERENCES categoria(id),
+    FOREIGN KEY (proveedor_id) REFERENCES proveedor(id)
+);
+
+-- =========================
+-- TABLA CLIENTE
+-- =========================
+CREATE TABLE cliente (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    telefono VARCHAR(50),
+    email VARCHAR(150),
+    direccion VARCHAR(200)
+);
+
+-- =========================
+-- TABLA MOVIMIENTOS
+-- =========================
+CREATE TABLE movimiento_inventario (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    producto_id INT NOT NULL,
+    tipo ENUM('ENTRADA', 'SALIDA') NOT NULL,
+    cantidad INT NOT NULL,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+    usuario_id INT,
+    cliente_id INT NULL,
+    descripcion TEXT NULL,
+    FOREIGN KEY (producto_id) REFERENCES producto(id),
+    FOREIGN KEY (usuario_id) REFERENCES auth_user(id),
+    FOREIGN KEY (cliente_id) REFERENCES cliente(id)
+);

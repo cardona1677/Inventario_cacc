@@ -1,0 +1,232 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Carrito - Tienda Online</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .cart-item {
+            transition: all 0.3s;
+        }
+        .cart-item:hover {
+            background-color: #f8f9fa;
+        }
+        .quantity-input {
+            width: 80px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="bi bi-shop"></i> Tienda Online
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">
+                            <i class="bi bi-house"></i> Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'ver_carrito' %}">
+                            <i class="bi bi-cart3"></i> Carrito
+                            <span class="badge bg-danger">{{ carrito_count }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'mis_pedidos' %}">
+                            <i class="bi bi-clock-history"></i> Mis Pedidos
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Mi Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mensajes -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Contenido del Carrito -->
+    <div class="container my-5">
+        <h2 class="mb-4">
+            <i class="bi bi-cart3"></i> Mi Carrito de Compras
+        </h2>
+
+        {% if carrito %}
+        <div class="row">
+            <!-- Items del carrito -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        {% for producto_id, item in carrito.items %}
+                        <div class="cart-item p-3 border-bottom">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                        <i class="bi bi-box" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h5 class="mb-1">{{ item.nombre }}</h5>
+                                    <p class="text-muted mb-0">Precio: ${{ item.precio|floatformat:2 }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <form method="POST" action="{% url 'actualizar_cantidad_carrito' producto_id %}" class="d-flex align-items-center">
+                                        {% csrf_token %}
+                                        <label class="me-2">Cantidad:</label>
+                                        <input type="number" name="cantidad" value="{{ item.cantidad }}" min="1" class="form-control quantity-input" onchange="this.form.submit()">
+                                    </form>
+                                </div>
+                                <div class="col-md-2">
+                                    <h5 class="text-primary mb-0">
+                                        ${{ item.precio|floatformat:2|multiply:item.cantidad }}
+                                    </h5>
+                                </div>
+                                <div class="col-md-1">
+                                    <a href="{% url 'eliminar_del_carrito' producto_id %}" class="btn btn-danger btn-sm" onclick="return confirm('¿Eliminar este producto del carrito?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Seguir Comprando
+                            </a>
+                            <a href="{% url 'vaciar_carrito' %}" class="btn btn-outline-danger" onclick="return confirm('¿Estás seguro de vaciar el carrito?')">
+                                <i class="bi bi-trash"></i> Vaciar Carrito
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen del pedido -->
+            <div class="col-lg-4">
+                <div class="card sticky-top" style="top: 20px;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-receipt"></i> Resumen del Pedido</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <strong>${{ total|floatformat:2 }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Envío:</span>
+                            <strong class="text-success">Gratis</strong>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <h5>Total:</h5>
+                            <h5 class="text-primary">${{ total|floatformat:2 }}</h5>
+                        </div>
+                        
+                        <button class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalConfirmarPedido">
+                            <i class="bi bi-check-circle"></i> Confirmar Pedido
+                        </button>
+                        
+                        <div class="alert alert-info mb-0 mt-3">
+                            <small>
+                                <i class="bi bi-info-circle"></i> 
+                                Total de productos: <strong>{{ carrito_count }}</strong>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Confirmar Pedido -->
+        <div class="modal fade" id="modalConfirmarPedido" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-check-circle"></i> Confirmar Pedido</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" action="{% url 'confirmar_pedido' %}">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <h6>Resumen del Pedido:</h6>
+                            <ul class="list-group mb-3">
+                                {% for producto_id, item in carrito.items %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>{{ item.nombre }} (x{{ item.cantidad }})</span>
+                                    <strong>${{ item.precio|floatformat:2|multiply:item.cantidad }}</strong>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            
+                            <div class="alert alert-success">
+                                <strong>Total: ${{ total|floatformat:2 }}</strong>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Dirección de Entrega</label>
+                                <textarea name="direccion_entrega" class="form-control" rows="2" required placeholder="Ingresa tu dirección completa"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Observaciones (opcional)</label>
+                                <textarea name="observaciones" class="form-control" rows="2" placeholder="Instrucciones especiales para la entrega"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Confirmar y Realizar Pedido
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Carrito vacío -->
+        <div class="text-center py-5">
+            <i class="bi bi-cart-x" style="font-size: 5rem; color: #ccc;"></i>
+            <h3 class="mt-4">Tu carrito está vacío</h3>
+            <p class="text-muted">¡Agrega productos para comenzar tu compra!</p>
+            <a href="{% url 'home' %}" class="btn btn-primary btn-lg mt-3">
+                <i class="bi bi-shop"></i> Ir a la Tienda
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
